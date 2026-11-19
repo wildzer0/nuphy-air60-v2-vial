@@ -51,7 +51,7 @@ jobs:
           node-version: 22
 
       - name: Web flasher checks against the built image
-        run: FW_VIAL="$PWD/vial-qmk/nuphy_air60_v2_ansi_vial.bin" node --test port/web/test/
+        run: FW_VIAL="$PWD/vial-qmk/nuphy_air60_v2_ansi_vial.bin" node --test "port/web/test/*.test.mjs"
 
       - uses: actions/upload-artifact@v4
         with:

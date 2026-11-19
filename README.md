@@ -47,7 +47,7 @@ breathing/solid look swapped on your board, change `RF_CHARGE_ACTIVE` in `side.c
 
 `web/` is a small WebUSB page (Chrome, Edge, Opera) that backs up the flash twice and checks the copies match, refuses anything but the
 STM32F072's 128 KB with read protection at level 0, validates the image (DFU-suffix CRC, vector table, size below the settings area) and writes it at
-`0x08000000` only. It is **untested on a real keyboard**: the image checks have unit tests (`node --test web/test/`), the USB part has not been tried.
+`0x08000000` only. It is **untested on a real keyboard**: the image checks have unit tests (`node --test "web/test/*.test.mjs"`), the USB part has not been tried.
 With GitHub Pages enabled it is served from `web/`.
 
 ## Build
