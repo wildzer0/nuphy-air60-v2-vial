@@ -1,0 +1,59 @@
+name: build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+env:
+  # the vial-qmk commit the port was written and tested against
+  VIAL_QMK_COMMIT: dd43959ae5c08d8a28d38a1acf7b04e86b14a344
+
+jobs:
+  firmware:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: port
+
+      - name: Fetch vial-qmk at the pinned commit
+        run: |
+          git clone --filter=blob:none --no-checkout https://github.com/vial-kb/vial-qmk.git vial-qmk
+          git -C vial-qmk checkout "$VIAL_QMK_COMMIT"
+          git -C vial-qmk submodule update --init --recursive
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Toolchain
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-arm-none-eabi binutils-arm-none-eabi libnewlib-arm-none-eabi
+          arm-none-eabi-gcc --version | head -1
+          pip install qmk==1.2.0 -r vial-qmk/requirements.txt
+
+      - name: Build the Vial keymap
+        run: |
+          cp -R port/keyboards/nuphy vial-qmk/keyboards/
+          cd vial-qmk
+          QMK_HOME="$PWD" make nuphy/air60_v2/ansi:vial
+
+      - name: Check the image
+        run: |
+          python3 port/tools/check_size.py vial-qmk/nuphy_air60_v2_ansi_vial.bin
+          sha256sum vial-qmk/nuphy_air60_v2_ansi_vial.bin
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Web flasher checks against the built image
+        run: FW_VIAL="$PWD/vial-qmk/nuphy_air60_v2_ansi_vial.bin" node --test port/web/test/
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: nuphy_air60_v2_ansi_vial
+          path: vial-qmk/nuphy_air60_v2_ansi_vial.bin

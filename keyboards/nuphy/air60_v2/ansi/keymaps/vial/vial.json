@@ -132,6 +132,41 @@
       "name": "Bat\nNum",
       "title": "Battery level on number row (BAT_NUM)",
       "shortName": "Bat\nNum"
+    },
+    {
+      "name": "à",
+      "title": "Accent a grave",
+      "shortName": "à"
+    },
+    {
+      "name": "è",
+      "title": "Accent e grave",
+      "shortName": "è"
+    },
+    {
+      "name": "é",
+      "title": "Accent e acute",
+      "shortName": "é"
+    },
+    {
+      "name": "ì",
+      "title": "Accent i grave",
+      "shortName": "ì"
+    },
+    {
+      "name": "ò",
+      "title": "Accent o grave",
+      "shortName": "ò"
+    },
+    {
+      "name": "ù",
+      "title": "Accent u grave",
+      "shortName": "ù"
+    },
+    {
+      "name": "Acc\nLinux",
+      "title": "Accents the Linux way (with the switch on Win)",
+      "shortName": "Acc\nLinux"
     }
   ],
   "layouts": {

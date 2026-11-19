@@ -1,0 +1,46 @@
+name: pages
+
+# Publishes web/ (the browser flasher) on GitHub Pages, with the firmware of the latest releases next to it.
+# Needs Settings > Pages > Source: GitHub Actions.
+on:
+  push:
+    branches: [main]
+    paths: ["web/**", "tools/make_manifest.py", ".github/workflows/pages.yml"]
+  release:
+    types: [published]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-24.04
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Firmware of the latest releases
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p web/firmware
+          for tag in $(gh release list --limit 5 --json tagName --jq '.[].tagName'); do
+            gh release download "$tag" --pattern '*.bin' --dir web/firmware || true
+          done
+          python3 tools/make_manifest.py web/firmware
+
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: web
+      - id: deployment
+        uses: actions/deploy-pages@v4

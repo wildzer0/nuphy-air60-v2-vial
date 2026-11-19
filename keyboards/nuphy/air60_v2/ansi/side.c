@@ -296,19 +296,29 @@ void sleep_sw_led_show(void)
 
 /**
  * @brief  host system led indicate.
+ *
+ * Left LED: Caps Lock is solid; Caps Word (Vial/QMK feature, off in the stock firmware) blinks in the same colour.
+ * If both are on, Caps Lock wins.
  */
+#define CAPS_WORD_BLINK_MS 500
+
 void sys_led_show(void)
 {
-    if (dev_info.link_mode == LINK_USB) {
-        if (host_keyboard_led_state().caps_lock) {
+    const bool caps_lock = (dev_info.link_mode == LINK_USB) ? host_keyboard_led_state().caps_lock : ((dev_info.rf_led & 0x02) != 0);
+
+    if (caps_lock) {
+        set_left_rgb(colour_lib[4][0], colour_lib[4][1], colour_lib[4][2]);
+    }
+#ifdef CAPS_WORD_ENABLE
+    else if (is_caps_word_on()) {
+        if ((timer_read32() / CAPS_WORD_BLINK_MS) % 2 == 0) {
             set_left_rgb(colour_lib[4][0], colour_lib[4][1], colour_lib[4][2]);
         }
-    }
-    else {
-        if (dev_info.rf_led & 0x02) {
-            set_left_rgb(colour_lib[4][0], colour_lib[4][1], colour_lib[4][2]);
+        else {
+            set_left_rgb(0x00, 0x00, 0x00);
         }
     }
+#endif
 }
 
 /**
@@ -584,11 +594,6 @@ void rf_led_show(void)
 #define BAT_GAUGE_KEYS        10
 #define BAT_GAUGE_LOW_PERCENT 20
 #define BAT_LOW_PERCENT       15
-
-// Bits of the charge byte the radio reports (rf_charge). INFERRED from the stock code, not measured: bit 0 = the cable is in,
-// bit 1 = the cell is charging (a cable with bit 1 clear means the charge is done).
-#define RF_CHARGE_CABLE       0x01
-#define RF_CHARGE_ACTIVE      0x02
 #define BAT_LOW_BLINK_MS      500
 
 void num_led_show(void)

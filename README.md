@@ -18,7 +18,8 @@ Tested by the author on one Air60 V2 (stock firmware v2.1.5, RF and dongle left 
 | Vial detection, unlock (Esc + Backspace), edits kept after a reboot | works |
 | Bluetooth pairing and switching between the 3 channels | works |
 | 2.4 GHz with the dongle, sleep/wake, charging, RGB, tap dance / combos / macros | **not tested yet** |
-| Battery gauge on the number keys (below) | implemented, **not tested on hardware yet** |
+| Battery gauge on the number keys (below) | flashed; the look and the charge colours are **not verified yet** |
+| Caps Lock / Caps Word LED, low-battery warning, accented letters, browser flasher | built, **not tested on hardware yet** |
 
 Everything marked "not tested" is exactly that: unverified. Please report what you find.
 
@@ -32,6 +33,23 @@ The right-hand side LED no longer shows a percentage: it breathes while charging
 The meaning of the radio's charge byte (bit 0 = cable, bit 1 = charging) is **inferred** from NuPhy's code, not measured. If cyan/green or
 breathing/solid look swapped on your board, change `RF_CHARGE_ACTIVE` in `side.c`.
 
+## Extra features
+
+- **Caps indicator**: the left LED is solid for Caps Lock and **blinks** for Caps Word (assign `CW_TOGG` in Vial, Quantum tab).
+- **Low-battery warning**: at 20 % or less, on battery, the gauge shows itself at once and then every 30 s for 3 s.
+- **Accented letters** (à è é ì ò ù, upper case with Shift, Caps Lock or Caps Word), without installing a layout: `Fn + Space` opens a one-shot
+  layer, then `A à`, `E è`, `R é`, `I ì`, `O ò`, `U ù`. The sequence follows the Win/Mac switch: Windows types `Alt` + the Latin-1 code on the
+  keypad (Num Lock is switched on if needed), macOS types `Option` + dead key + vowel (**needs a US/ABC host layout**), and with the switch on
+  Win the `ACC_LNX` key toggles the Linux way (`Ctrl+Shift+U`, hex code, space). On the first boot the firmware writes only these new key
+  assignments into the EEPROM keymap; everything else you edited is left alone.
+
+## Browser flasher
+
+`web/` is a small WebUSB page (Chrome, Edge, Opera) that backs up the flash twice and checks the copies match, refuses anything but the
+STM32F072's 128 KB with read protection at level 0, validates the image (DFU-suffix CRC, vector table, size below the settings area) and writes it at
+`0x08000000` only. It is **untested on a real keyboard**: the image checks have unit tests (`node --test web/test/`), the USB part has not been tried.
+With GitHub Pages enabled it is served from `web/`.
+
 ## Build
 
 ```
@@ -42,7 +60,8 @@ cp -R /path/to/this/repo/keyboards/nuphy keyboards/
 make nuphy/air60_v2/ansi:vial          # needs the qmk CLI (1.2.0) and arm-none-eabi-gcc (built with 15.3.1)
 ```
 
-The result is `nuphy_air60_v2_ansi_vial.bin` (about 74 KB; the stock firmware is 69 KB; there are ~48 KB left before the emulated EEPROM).
+The result is `nuphy_air60_v2_ansi_vial.bin` (about 75 KB; the stock firmware is 69 KB; there are ~47 KB left before the emulated EEPROM).
+GitHub Actions builds it on every push (`.github/workflows/build.yml`, never run yet) and publishes a release when you push a `v*` tag.
 
 ## Flash
 

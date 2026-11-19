@@ -51,6 +51,8 @@ bool f_bat_num_show     = 0;
 bool f_bat_gauge_show   = 0;
 uint32_t bat_gauge_timer = 0;
 #define BAT_GAUGE_SHOW_MS 3000
+#define BAT_LOW_WARN_PERCENT   20
+#define BAT_LOW_WARN_PERIOD_MS 30000
 
 uint8_t host_mode;
 host_driver_t *m_host_driver     = 0;
@@ -662,6 +664,19 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
             }
             return false;
 
+        case ACC_A ... ACC_U:
+            if (record->event.pressed) {
+                accent_type(keycode - ACC_A);
+            }
+            return false;
+
+        case ACC_LNX:
+            if (record->event.pressed) {
+                user_config.retain2 ^= ACCENT_LINUX_BIT;
+                eeconfig_update_user_datablock(&user_config, 0, sizeof(user_config));
+            }
+            return false;
+
         default:
             return true;
     }
@@ -730,6 +745,36 @@ void m_londing_eeprom_data(void)
 /**
    qmk keyboard post init
  */
+#if defined(VIAL_ENABLE) && DYNAMIC_KEYMAP_LAYER_COUNT > 7
+/**
+ * @brief  Writes the keymap entries added after the first release into the EEPROM keymap (which keeps what was there
+ *         when the firmware was flashed), once: Fn+Space is the one-shot accent layer 7. Nothing else is touched.
+ */
+static void keymap_migrate(void)
+{
+    if ((user_config.retain2 & KEYMAP_GEN_MASK) >= KEYMAP_GEN) {
+        return;
+    }
+
+    for (uint8_t row = 0; row < MATRIX_ROWS; row++) {
+        for (uint8_t col = 0; col < MATRIX_COLS; col++) {
+            dynamic_keymap_set_keycode(7, row, col, KC_TRNS);
+        }
+    }
+    dynamic_keymap_set_keycode(7, 3, 1, ACC_A);   // A
+    dynamic_keymap_set_keycode(7, 2, 3, ACC_E);   // E
+    dynamic_keymap_set_keycode(7, 2, 4, ACC_EA);  // R
+    dynamic_keymap_set_keycode(7, 2, 8, ACC_I);   // I
+    dynamic_keymap_set_keycode(7, 2, 9, ACC_O);   // O
+    dynamic_keymap_set_keycode(7, 2, 7, ACC_U);   // U
+    dynamic_keymap_set_keycode(1, 5, 6, OSL(7));  // Mac Fn + Space
+    dynamic_keymap_set_keycode(4, 5, 6, OSL(7));  // Win Fn + Space
+
+    user_config.retain2 = (user_config.retain2 & ~KEYMAP_GEN_MASK) | KEYMAP_GEN;
+    eeconfig_update_user_datablock(&user_config, 0, sizeof(user_config));
+}
+#endif
+
 void keyboard_post_init_kb(void)
 {
     m_gpio_init();
@@ -739,6 +784,9 @@ void keyboard_post_init_kb(void)
 
     m_break_all_key();
     m_londing_eeprom_data();
+#if defined(VIAL_ENABLE) && DYNAMIC_KEYMAP_LAYER_COUNT > 7
+    keymap_migrate();
+#endif
     m_power_on_dial_sw_scan();
     keyboard_post_init_user();
 }
@@ -754,6 +802,22 @@ bool rgb_matrix_indicators_kb(void)
     if (f_bat_gauge_show && timer_elapsed32(bat_gauge_timer) >= BAT_GAUGE_SHOW_MS) {
         f_bat_gauge_show = false;
     }
+    // Low battery on battery power: show the gauge at once and then every BAT_LOW_WARN_PERIOD_MS
+    static bool     bat_low_warned = false;
+    static uint32_t bat_low_timer  = 0;
+
+    if (!(dev_info.rf_charge & RF_CHARGE_CABLE) && dev_info.rf_baterry <= BAT_LOW_WARN_PERCENT) {
+        if (!bat_low_warned || timer_elapsed32(bat_low_timer) >= BAT_LOW_WARN_PERIOD_MS) {
+            bat_low_warned   = true;
+            bat_low_timer    = timer_read32();
+            bat_gauge_timer  = bat_low_timer;
+            f_bat_gauge_show = true;
+        }
+    }
+    else {
+        bat_low_warned = false;
+    }
+
     if (f_bat_num_show || f_bat_gauge_show) {
         num_led_show();
     }

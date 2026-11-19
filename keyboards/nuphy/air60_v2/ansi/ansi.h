@@ -49,7 +49,15 @@ enum custom_keycodes {
     BAT_SHOW,
     RGB_TEST,
     SHIFT_GRV,
-    BAT_NUM
+    BAT_NUM,
+
+    ACC_A,   // a grave
+    ACC_E,   // e grave
+    ACC_EA,  // e acute
+    ACC_I,
+    ACC_O,
+    ACC_U,
+    ACC_LNX  // toggle: with the switch on Win, type the accents the Linux way
 };
 
 
@@ -151,6 +159,18 @@ typedef struct
     uint8_t rf_baterry;
     uint8_t sys_sw_state;
 } DEV_INFO_STRUCT;
+
+// Bits of the charge byte the radio reports (rf_charge). INFERRED from the stock code, not measured: bit 0 = the cable is in,
+// bit 1 = the cell is charging (a cable with bit 1 clear means the charge is done).
+#define RF_CHARGE_CABLE       0x01
+#define RF_CHARGE_ACTIVE      0x02
+
+// user_config.retain2: bit 7 = accents the Linux way; bits 0-6 = generation of the default keymap entries already written to the EEPROM
+#define ACCENT_LINUX_BIT      0x80
+#define KEYMAP_GEN_MASK       0x7f
+#define KEYMAP_GEN            1
+
+void accent_type(uint8_t index);
 
 
 #define SYS_SW_WIN        0xa1

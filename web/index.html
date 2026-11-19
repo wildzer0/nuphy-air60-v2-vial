@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NuPhy Air60 V2 Vial flasher</title>
+<style>
+  :root { --bg:#fbfbfa; --fg:#1d1d1b; --muted:#66655f; --line:#dcdad2; --card:#fff; --accent:#1f5fbf; --ok:#1c7a3b; --bad:#b3261e; --warn:#8a5a00; --code:#f0eee7; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#161614; --fg:#ecebe6; --muted:#a3a198; --line:#34332f; --card:#1f1f1c; --accent:#7aa7ee; --ok:#5cc47f; --bad:#f0857d; --warn:#e0b25a; --code:#262521; } }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--fg); font:16px/1.5 system-ui, sans-serif; }
+  main { max-width: 46rem; margin: 0 auto; padding: 1.5rem 1rem 4rem; }
+  h1 { font-size: 1.5rem; margin: 0 0 .25rem; }
+  h2 { font-size: 1.05rem; margin: 0 0 .5rem; }
+  p { margin: .4rem 0; }
+  .muted { color: var(--muted); }
+  .banner { border:1px solid var(--warn); border-radius:.5rem; padding:.6rem .8rem; margin:1rem 0; color:var(--warn); }
+  section { background:var(--card); border:1px solid var(--line); border-radius:.6rem; padding:1rem; margin:.8rem 0; }
+  section[aria-disabled="true"] { opacity:.55; }
+  button { font:inherit; padding:.45rem .9rem; border-radius:.4rem; border:1px solid var(--accent); background:var(--accent); color:#fff; cursor:pointer; }
+  button.secondary { background:transparent; color:var(--accent); }
+  button:disabled { opacity:.45; cursor:not-allowed; }
+  button.danger { background:var(--bad); border-color:var(--bad); }
+  code, pre { background:var(--code); border-radius:.3rem; font:.85rem ui-monospace, monospace; }
+  code { padding:.05rem .3rem; }
+  pre { padding:.6rem; overflow:auto; max-height:15rem; margin:.5rem 0 0; white-space:pre-wrap; }
+  .row { display:flex; gap:.6rem; flex-wrap:wrap; align-items:center; margin:.5rem 0; }
+  .ok { color:var(--ok); } .bad { color:var(--bad); } .warn { color:var(--warn); }
+  progress { width:100%; height:.7rem; }
+  ul { margin:.3rem 0 .3rem 1.2rem; padding:0; }
+  label { display:block; margin:.5rem 0; }
+  input[type=file] { max-width:100%; }
+</style>
+</head>
+<body>
+<main>
+  <h1>NuPhy Air60 V2 &ndash; Vial flasher</h1>
+  <p class="muted">Backs up and flashes the keyboard's main MCU (STM32F072) from the browser. The radio module and the 2.4&nbsp;GHz dongle are never touched.</p>
+
+  <div class="banner" role="note"><strong>Experimental.</strong> The image checks are unit-tested against real firmware files, but the USB part has <strong>not yet been tried on a real keyboard</strong>.
+    Always keep the backup it makes. Going back to stock is always possible from the DFU mode (hold <code>Esc</code> while plugging in).</div>
+
+  <p id="support" class="bad" hidden>This browser has no WebUSB. Use Chrome, Edge or Opera on a computer.</p>
+
+  <section id="s1">
+    <h2>1. Put the keyboard in DFU mode</h2>
+    <p>Unplug the USB cable, hold <strong>Esc</strong>, plug it back in, then release. Then connect:</p>
+    <div class="row"><button id="connect">Connect keyboard</button> <button id="disconnect" class="secondary" disabled>Disconnect</button></div>
+    <p id="devinfo" class="muted">Not connected.</p>
+    <p class="muted">Windows needs the WinUSB driver for <code>0483:df11</code> (for instance with Zadig); Linux needs a udev rule for it.</p>
+  </section>
+
+  <section id="s2" aria-disabled="true">
+    <h2>2. Back up the current firmware</h2>
+    <p>Reads the 128&nbsp;KB of flash twice and checks that both reads are identical. <strong>Required before flashing.</strong></p>
+    <div class="row"><button id="backup" disabled>Back up</button> <a id="savebackup" hidden>Save backup file</a></div>
+    <p id="backupinfo" class="muted"></p>
+  </section>
+
+  <section id="s3" aria-disabled="true">
+    <h2>3. Choose the firmware</h2>
+    <div id="releases" class="muted"></div>
+    <label>or a <code>.bin</code> file (your backup, a build, NuPhy's official firmware): <input id="file" type="file" accept=".bin" disabled></label>
+    <div id="imginfo"></div>
+  </section>
+
+  <section id="s4" aria-disabled="true">
+    <h2>4. Flash</h2>
+    <label><input id="confirm" type="checkbox" disabled> I have saved the backup and I know how to go back to stock.</label>
+    <div class="row"><button id="flash" class="danger" disabled>Flash firmware</button></div>
+    <progress id="progress" value="0" max="1" hidden></progress>
+    <p id="flashinfo"></p>
+    <p class="muted">The keymap, side-light and sleep settings are reset on the first boot after a different firmware (the EEPROM layout changes).</p>
+  </section>
+
+  <section>
+    <h2>Log</h2>
+    <pre id="log" aria-live="polite"></pre>
+  </section>
+
+  <p class="muted">Source: <a href="https://github.com/wildzer0/nuphy-air60-v2-vial">wildzer0/nuphy-air60-v2-vial</a>. USB DFU code from <a href="https://github.com/devanlai/webdfu">webdfu</a> (ISC).</p>
+</main>
+<script src="vendor/dfu.js"></script>
+<script src="vendor/dfuse.js"></script>
+<script src="fwcheck.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
