@@ -1,0 +1,18 @@
+# LOG
+
+## 2026-11-19
+- Creata struttura cartelle. Calcolati sha1/sha256 dei binari originali (`firmware/originali.sha.txt`); sha1 QMK v2.1.5 = quello NuPhy.
+- Fase 1: ricerca su GitHub. Nessun port Vial per Air60 V2. Trovati: ablasik/nuphy-qmk (Air60 V2, VIA, attivo), kbsteven/Nuphy-Vial (Air75 V2, abbandonato), ryodeushii (no Air60, no Vial).
+- Nota: durante il setup ho tolto e ripristinato i permessi di scrittura su `firmware/originali` (stato finale = quello iniziale, file non modificati).
+- Aperto: repo ufficiale NuPhy, Reddit/Discord, ZMK, guide di recovery; dfu-util non installato (`brew install dfu-util`).
+- (stessa data) Completata Fase 1: trovato sorgente ufficiale nuphy-src/qmk_firmware (branch nuphy-keyboards, air60_v2); vial-qmk base QMK ~mag 2025; ZMK nessun risultato; recovery RF = Nordic Secure DFU via BLE (da tool HikaruEgashira). dfu-util 0.11 installato dall'utente.
+- Decisione utente: port da zero partendo da vial-qmk originale + sorgente NuPhy.
+- Fase 2: analisi binari. QMK base 0x08000000, VID/PID 19F5:3255; protocollo UART 0x5A documentato da sorgente; RF e dongle = pacchetti Nordic DFU firmati ECDSA → intoccabili; dongle exe contiene dfu.zip estratto in re/dongle_extracted/. Aperto: build del sorgente NuPhy per confronto col binario (serve arm-none-eabi-gcc), RDP/SWD, differenza dongle win/mac.
+- Fase 3: STM32 in DFU via Esc+USB. RDP livello 0. Backup flash (sha256 8f3e62a4…) e option bytes in firmware/backup/ (riletto 2x identico). Dump = ufficiale v2.1.5 (68988 B) + resto 0xFF; il .bin NuPhy ha un suffisso DFU di 16 B. Nessuna scrittura eseguita. Aperto: ciclo flash di prova (da confermare), dove sta l'EEPROM emulata, backup RF/dongle impossibile (nessun SWD).
+- Flash di prova STM32 con firmware ufficiale v2.1.5 (confermato dall'utente): OK, la tastiera ri-enumera 19F5. Da confermare a mano: tasti, BT, 2.4 GHz, keymap.
+- Fase 4: nuphy-src diff vs QMK giugno 2024: core invariato (solo common_features.mk, schema, driver IS31FL3763). Clonato vial-qmk in src/ (dd43959). Prova di build: 5 categorie di errori meccanici (JSON LED, eeconfig datablock a 3 arg, keyboard_protocol, driver IS31FL3733, -Werror GCC15). Binario non raggiunto → dimensione non misurata. Venv qmk 1.2.0 in scratchpad. docs/04-decisione.md scritto. In attesa conferma utente.
+- Fase 5: port compilato in src/vial-qmk/keyboards/nuphy/air60_v2 (vedi docs/05-port.md). Vial bin 74680 B (sha256 1c4234f6…), margine 48 KB, RAM 13680/16384. Unlock Esc+Backspace. NON flashato, nessun test sul dispositivo. Aperto: conferma utente per il flash, checklist di test, verifica sorgente vs binario 2.1.5.
+- Flash del port Vial sullo STM32 (conferma utente): sha256 verificato, erase+download OK (74664 B), la tastiera ri-enumera 19F5:3255 con serial 'vial:<device-id>'. Da fare: checklist di test.
+- Port v1 difettoso su dispositivo (Backspace/disconnessioni). Diagnosi: hidprobe/hidwatch (re/tools), confronto nativo↔Vial (docs/06). Causa trovata: UART su A9/A10 (colonne 13/14) invece di B6/B7 perché QMK 2025 non mappa piu SD1_*. v2 compilato (sha256 e8c46e29…), NON flashato; in attesa di conferma utente. v1 conservato come _v1_uart_pins_bug.
+- Flash v2 (UART B6/B7) sullo STM32 con conferma utente: erase+download OK (74660 B), ri-enumera 19F5:3255. Da verificare: tasti, Backspace, BT, 2.4G.
+- Esito v2: l'utente riferisce che la tastiera funziona correttamente (Backspace ok). Checklist completa (BT, 2.4G, batteria, sleep, RGB, persistenza Vial, ripristino stock) ancora da confermare voce per voce.
