@@ -10,6 +10,7 @@ env:
 
 permissions:
   contents: write
+  actions: write   # to start the pages workflow: events raised by GITHUB_TOKEN do not trigger other workflows
 
 jobs:
   release:
@@ -47,6 +48,12 @@ jobs:
       - uses: softprops/action-gh-release@v2
         with:
           generate_release_notes: true
+          prerelease: true   # until the firmware has been tried on hardware; untick it on GitHub when it has
           files: |
             vial-qmk/nuphy_air60_v2_ansi_vial-*.bin
             vial-qmk/nuphy_air60_v2_ansi_vial-*.bin.sha256
+
+      - name: Refresh the browser flasher (its manifest lists the releases)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run pages.yml --repo "$GITHUB_REPOSITORY" --ref main
