@@ -19,7 +19,8 @@ Tested by the author on one Air60 V2 (stock firmware v2.1.5, RF and dongle left 
 | Bluetooth pairing and switching between the 3 channels | works |
 | 2.4 GHz with the dongle, sleep/wake, charging, RGB, tap dance / combos / macros | **not tested yet** |
 | Battery gauge on the number keys (below) | flashed; the look and the charge colours are **not verified yet** |
-| Caps Lock / Caps Word LED, low-battery warning, accented letters, browser flasher | built, **not tested on hardware yet** |
+| Browser flasher: backup, then flash of firmware v3 | works (tried once by the author) |
+| Caps Lock / Caps Word LED, low-battery warning, accented letters | built, **not tested on hardware yet** |
 
 Everything marked "not tested" is exactly that: unverified. Please report what you find.
 
@@ -47,7 +48,7 @@ breathing/solid look swapped on your board, change `RF_CHARGE_ACTIVE` in `side.c
 
 `web/` is a small WebUSB page (Chrome, Edge, Opera) that backs up the flash twice and checks the copies match, refuses anything but the
 STM32F072's 128 KB with read protection at level 0, validates the image (DFU-suffix CRC, vector table, size below the settings area) and writes it at
-`0x08000000` only. It is **untested on a real keyboard**: the image checks have unit tests (`node --test "web/test/*.test.mjs"`), the USB part has not been tried.
+`0x08000000` only. It has been **tried once on a real keyboard** (backup and flash of v3 worked); the image checks have unit tests (`node --test "web/test/*.test.mjs"`). Other systems and browsers are untested.
 With GitHub Pages enabled it is served from `web/`.
 
 ## Build
