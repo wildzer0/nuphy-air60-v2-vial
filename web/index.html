@@ -27,7 +27,8 @@
   .row { display:flex; gap:.6rem; flex-wrap:wrap; align-items:center; margin:.5rem 0; }
   .ok { color:var(--ok); } .bad { color:var(--bad); } .warn { color:var(--warn); }
   progress { width:100%; height:.7rem; }
-  ul { margin:.3rem 0 .3rem 1.2rem; padding:0; }
+  ul, ol { margin:.3rem 0 .3rem 1.2rem; padding:0; }
+  details { margin:.5rem 0; } summary { cursor:pointer; color:var(--accent); }
   label { display:block; margin:.5rem 0; }
   input[type=file] { max-width:100%; }
 </style>
@@ -61,6 +62,14 @@
     <h2>3. Choose the firmware</h2>
     <div id="releases" class="muted"></div>
     <label>or a <code>.bin</code> file (your backup, a build, NuPhy's official firmware): <input id="file" type="file" accept=".bin" disabled></label>
+    <details>
+      <summary>Where do I get NuPhy's official firmware, to go back to stock?</summary>
+      <ol>
+        <li>Open <a href="https://nuphy.com/pages/firmwares" target="_blank" rel="noopener">nuphy.com/pages/firmwares</a> and download the <strong>QMK firmware</strong> for the <strong>Air60 V2</strong> (the <code>.bin</code>; it is NuPhy's file, so it is not hosted here).</li>
+        <li>Choose that file above. The page checks it like any other image.</li>
+        <li>NuPhy's RF and dongle updates are separate and are never needed to go back: this tool does not touch them. Your own backup from step 2 restores exactly what you had.</li>
+      </ol>
+    </details>
     <div id="imginfo"></div>
   </section>
 
